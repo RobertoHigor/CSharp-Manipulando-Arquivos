@@ -12,7 +12,7 @@ namespace CsvHelper_demo
     {
         static void Main(string[] args)
         {
-            List<Carro> carros = LerCsv("carros.csv");
+            List<Carro> carros = LerCsv<Carro>("carros.csv");
             carros.RemoveAt(1);
 
             foreach (Carro carro in carros)
