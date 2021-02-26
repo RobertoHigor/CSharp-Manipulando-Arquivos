@@ -1,0 +1,1 @@
+Classe é o tipo de dados mais poderoso do C#. Como uma estrutura,uma classe define o dado e o comportamento do tipo de dado. 
