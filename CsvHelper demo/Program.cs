@@ -13,24 +13,44 @@ namespace CsvHelper_demo
     {
         static void Main(string[] args)
         {
-            List<Carro> carros = LerCsv<Carro>("carros_utf8.csv");
-            var carrosFiltrado = filtrarFabricante(carros, "Volkswagen");           
-            //carros.RemoveAt(1);
-
-            foreach (Carro carro in carrosFiltrado)
+            try
             {
-                Console.WriteLine(carro.ToString());
+                List<Carro> carros = LerCsv<Carro>("carros_utf8.csv");             
+                var carrosFiltrado = filtrarFabricante(carros, "Volkswagen");
+                //carros.RemoveAt(1);
+
+                foreach (Carro carro in carrosFiltrado)
+                {
+                    Console.WriteLine(carro.ToString());
+                }
+
+                //EscreverCsv<Carro>(carros, "carros.csv");
+            }
+            catch (System.IO.IOException)
+            {
+                System.Console.WriteLine("Arquivo não encontrado");
+            }
+            catch (HeaderValidationException)
+            {
+                System.Console.WriteLine("Arquivo ou codificação inválida");
+            }
+            catch (EncodingInvalidoException)
+            {
+                System.Console.WriteLine("Codificação inválida. Precisa ser UTF8");
+            }
+            catch (System.Exception)
+            {
+                System.Console.WriteLine("Exception");
             }
 
-            //EscreverCsv<Carro>(carros, "carros.csv");
         }
 
         private static List<Carro> filtrarFabricante(List<Carro> carros, string fabricante)
         {
             // Apenas carros de determinada marca
             IEnumerable<Carro> carrosFiltrado = from carro in carros
-                                         where carro.Fabricante == fabricante
-                                         select carro;
+                                                where carro.Fabricante == fabricante
+                                                select carro;
 
             return carrosFiltrado.ToList();
             // Alternativa
@@ -47,8 +67,8 @@ namespace CsvHelper_demo
             // Abrindo como apenas leitura
             // FileShare permite abrir arquivo enquanto outros processos o estão usando para algo
             using (FileStream stream = File.Open(caminho, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using (var reader = new StreamReader(stream))
+            {                
+                using (var reader = new StreamReader(stream, Encoding.UTF8, true))
                 using (var csv = new CsvReader(reader, config))
                 {
                     // Retorna um registro por vez
@@ -61,7 +81,7 @@ namespace CsvHelper_demo
                     catch (System.IO.IOException ex)
                     {
                         System.Console.WriteLine(ex + "Erro ao ler o arquivo");
-                        throw;
+                        throw new IOException("Erro ao ler arquivo");
                     }
                     catch (HeaderValidationException ex)
                     {
@@ -69,6 +89,32 @@ namespace CsvHelper_demo
                         throw;
                     }
                 }
+            }
+        }
+
+        // Método não funciona
+        private static void GetFileEncoding(string srcFile)
+        {
+            Encoding enc = Encoding.UTF8;
+            byte[] buffer = new byte[5];
+            FileStream file = new FileStream(srcFile, FileMode.Open);
+            file.Read(buffer, 0, 5);
+
+            // Checando BOM
+            if (buffer[0] == 0xef && buffer[1] == 0xbb && buffer[2] == 0xbf)
+                enc = Encoding.UTF8;
+            else if (buffer[0] == 0xfe && buffer[1] == 0xff)
+                enc = Encoding.Unicode;
+            else if (buffer[0] == 0 && buffer[1] == 0 && buffer[2] == 0xfe && buffer[3] == 0xff)
+                enc = Encoding.UTF32;
+            else if (buffer[0] == 0x2b && buffer[1] == 0x2f && buffer[2] == 0x76)
+                enc = Encoding.UTF7;
+
+            System.Console.WriteLine(enc.EncodingName);
+            if (enc != Encoding.UTF8)
+            {
+                System.Console.WriteLine(enc);
+                throw new EncodingInvalidoException("O arquivo precisa ser UTF8");
             }
         }
 
