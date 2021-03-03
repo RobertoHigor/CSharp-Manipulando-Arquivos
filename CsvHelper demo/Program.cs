@@ -32,7 +32,7 @@ namespace CsvHelper_demo
             }
             catch (HeaderValidationException)
             {
-                System.Console.WriteLine("Arquivo ou codificação inválida");
+                System.Console.WriteLine("Arquivo ou cdificação inválida");
             }
             catch (EncodingInvalidoException)
             {
