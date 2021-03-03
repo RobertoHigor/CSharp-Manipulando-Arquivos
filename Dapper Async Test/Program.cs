@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Transactions;
 using Dapper;
 using Dapper.Transaction;
 using Microsoft.Data.Sqlite;
@@ -32,8 +31,8 @@ namespace Dapper_Async_Test
 
             System.Console.WriteLine("Começando a contagem");
 
-            await DapperAsyncNovo(listaNumeros).ConfigureAwait(false);
-            //await DapperAsync(listaNumeros).ConfigureAwait(false);
+            //await DapperAsyncNovo(listaNumeros).ConfigureAwait(false);
+            await DapperAsync(listaNumeros).ConfigureAwait(false);
 
             stopwatch.Stop();
             System.Console.WriteLine($"Elapsed Time is {stopwatch.ElapsedMilliseconds}");
@@ -53,7 +52,7 @@ namespace Dapper_Async_Test
                     //conn.Execute(sql, listaNumeros);            
                     //TODO: Ver para que serve argumento transaction no dapper. Atualmente está opcional.
                     // Pode servir para associar transaction no caso de não utilizar BeginTransactionAsync
-                    await conn.ExecuteAsync(sql, listaNumeros, transaction: transaction);
+                    var affectedRows = await conn.ExecuteAsync(sql, listaNumeros, transaction);
 
                     await transaction.CommitAsync().ConfigureAwait(false);
                 }
@@ -82,9 +81,11 @@ namespace Dapper_Async_Test
                             //await conn.ExecuteAsync(sql, listaNumeros).ConfigureAwait(false);
                             await transaction.ExecuteAsync(sql, listaNumeros);
                             await transaction.CommitAsync();
+                            // or transaction.Commit();
                         }
                         catch (System.Exception)
                         {
+                            transaction.Rollback();
                             throw;
                         }
                     }
